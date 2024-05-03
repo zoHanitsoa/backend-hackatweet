@@ -3,26 +3,36 @@ var router = express.Router();
 require('../models/connection');
 
 const Tweet = require('../models/tweets');
+const User = require('../models/users');
 
 // const fetch = require('node-fetch');
 
 router.get('/', (req,res) => {
-  Tweet.find().then(data => {
+
+  Tweet.find()
+  .populate('user')
+  .then(data => {
 		res.json({ allTweets: data });
 	});
 
 
 })
 
-router.post('/newTweet', (req, res) => {
+router.post('/newTweet', async (req, res) => {
 
    console.log('new tweet en cours d enregistrement')
+
+   const token = req.body.token
+   const userData = await User.findOne({token : token})
+  //  console.log(userData._id)
+
+   
 
     const newTweet = new Tweet({
         content: req.body.tweetContent,
         date : new Date(),
         nbLike : 0,
-        user : 'manu',
+        user : userData._id,
     });
 
     newTweet.save()
@@ -47,11 +57,25 @@ console.log('plus un')
   }
 })
 
+router.put('/dislike/:tweetId', (req, res) => {
+  const tweetId = req.params.tweetId;
+  console.log('plus un')
+    // Tweet.findOneAndUpdate({_id: tweetId})
+    if (tweetId.match(/^[0-9a-fA-F]{24}$/)) {
+      Tweet.findOneAndUpdate({_id : tweetId} ,  { 
+        $inc: { nbLike: -1 } 
+     }, {new: true })
+      .then(data => {
+        console.log(data)
+        res.json({result : true , tweet : data})
+  
+      })
+    }
+  })
 
 
 
-      
-
+    
   router.delete('/delete/:tweetId' , (req,res) => {
 
     const tweetId = req.params.tweetId;
