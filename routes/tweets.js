@@ -6,7 +6,13 @@ const Tweet = require('../models/tweets');
 
 // const fetch = require('node-fetch');
 
+router.get('/', (req,res) => {
+  Tweet.find().then(data => {
+		res.json({ allTweets: data });
+	});
 
+
+})
 
 router.post('/newTweet', (req, res) => {
 
@@ -22,8 +28,52 @@ router.post('/newTweet', (req, res) => {
     newTweet.save()
     res.json({ result: true , content : newTweet});
      
-      
-   
 });
+
+
+router.put('/like/:tweetId', (req, res) => {
+const tweetId = req.params.tweetId;
+console.log('plus un')
+  // Tweet.findOneAndUpdate({_id: tweetId})
+  if (tweetId.match(/^[0-9a-fA-F]{24}$/)) {
+    Tweet.findOneAndUpdate({_id : tweetId} ,  { 
+      $inc: { nbLike: 1 } 
+   }, {new: true })
+    .then(data => {
+      console.log(data)
+      res.json({result : true , tweet : data})
+
+    })
+  }
+})
+
+
+
+
+      
+
+  router.delete('/delete/:tweetId' , (req,res) => {
+
+    const tweetId = req.params.tweetId;
+    if (tweetId.match(/^[0-9a-fA-F]{24}$/)) {
+      Tweet.deleteOne({_id : tweetId})
+      .then(data => {
+        console.log(data)
+        if (data.deletedCount > 0) {
+          res.json({result : true , content : data})
+        } else {
+          res.json({result : false , error : "Tweet doesn't exist. Impossible to delete"} )
+        }
+        
+      })
+    } else {
+      res.json({result : false , error : 'Wrong ID. Impossible to delete'} )
+    }
+    
+  })
+
+
+   
+
 
 module.exports = router;
