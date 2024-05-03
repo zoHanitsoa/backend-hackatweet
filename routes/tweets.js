@@ -9,7 +9,7 @@ const User = require('../models/users');
 
 router.get('/', (req,res) => {
 
-  Tweet.find()
+  Tweet.find().sort({date : -1})
   .populate('user')
   .then(data => {
 		res.json({ allTweets: data });
